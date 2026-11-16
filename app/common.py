@@ -1,5 +1,6 @@
 """Funções compartilhadas entre as páginas do app (dados, cache, estado, estilo)."""
 
+import os
 import sys
 from collections import Counter
 from pathlib import Path
@@ -9,6 +10,7 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 import pandas as pd  # noqa: E402
+import requests  # noqa: E402
 import streamlit as st  # noqa: E402
 from wordcloud import WordCloud  # noqa: E402
 
@@ -16,6 +18,7 @@ from src.data import store  # noqa: E402
 from src.llm.corpus import build_corpus  # noqa: E402
 
 REQUIRED_COLUMNS = store.COLUMNS
+API_URL_DEFAULT = os.getenv("EDUACESSO_API_URL", "http://localhost:8000")
 
 STOPWORDS_PT = {
     "a", "o", "e", "de", "do", "da", "em", "um", "uma", "os", "as", "dos", "das",
@@ -85,3 +88,31 @@ def word_frequencies(text: str, top_n: int = 20) -> pd.DataFrame:
 def build_wordcloud(text: str):
     return WordCloud(width=900, height=420, background_color="white",
                      stopwords=STOPWORDS_PT, colormap="Greens", collocations=False).generate(text)
+
+
+# --- Cliente da API de LLM ------------------------------------------------------
+def chamar_api_llm(base_url: str, payload: dict, timeout: float = 180) -> tuple[bool, dict]:
+    """POST /processar_texto. Retorna (ok, dados): JSON de sucesso, ou {'mensagem', 'dica'} em caso de erro."""
+    try:
+        resp = requests.post(f"{base_url.rstrip('/')}/processar_texto", json=payload, timeout=timeout)
+    except requests.ConnectionError:
+        return False, {"mensagem": "A API está fora do ar neste endereço.",
+                       "dica": "Suba com: uvicorn api.main:app --reload"}
+    except requests.Timeout:
+        return False, {"mensagem": "A API demorou demais para responder.",
+                       "dica": "Na primeira chamada o modelo é carregado, o que pode levar um tempo. Tente de novo."}
+    except requests.RequestException as exc:
+        return False, {"mensagem": f"Falha de rede ao chamar a API: {exc}"}
+
+    try:
+        dados = resp.json()
+    except ValueError:
+        return False, {"mensagem": f"Resposta inesperada da API (HTTP {resp.status_code})."}
+    if resp.ok:
+        return True, dados
+    if resp.status_code == 422 and isinstance(dados, dict) and isinstance(dados.get("detail"), list):
+        msgs = "; ".join(str(d.get("msg", "")).removeprefix("Value error, ") for d in dados["detail"])
+        return False, {"mensagem": f"Entrada inválida: {msgs}"}
+    if isinstance(dados, dict) and "mensagem" in dados:
+        return False, {"mensagem": dados["mensagem"], "dica": dados.get("dica")}
+    return False, {"mensagem": f"Erro HTTP {resp.status_code} da API."}

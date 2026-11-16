@@ -1,4 +1,4 @@
-# Documentação da API — EduAcesso ESG (TP3)
+# Documentação da API — EduAcesso ESG (TP3/TP4)
 
 API REST construída com **FastAPI** que expõe os dados do projeto. Código em `api/main.py`;
 a lógica de dados é compartilhada com o app Streamlit (`src/data/store.py`).
@@ -24,6 +24,8 @@ uvicorn api.main:app --reload        # na raiz do projeto
 | GET | `/estatisticas` | Totais, IDEB/abandono médios e agregados por UF |
 | GET | `/noticias` | Notícias coletadas via Beautiful Soup (`fonte_real` indica se veio do scraper ou da amostra) |
 | GET | `/corpus` | Documentos prontos para LLM. Filtro `tipo` = `texto`, `noticia` ou `indicador` |
+| POST | `/processar_texto` | **(TP4)** Sentimento ou resumo de um texto com LLM local. Erros: 422, 503, 504, 500 |
+| GET | `/llm/status` | **(TP4)** Modelos configurados/carregados e bibliotecas instaladas |
 
 ## Exemplos
 
@@ -66,4 +68,15 @@ no app após "Recarregar base" na página Upload / Download.
 ```bash
 pip install -r requirements-dev.txt
 python -m pytest -q tests
+```
+
+## LLM local (TP4)
+
+`POST /processar_texto` e `GET /llm/status` usam modelos HuggingFace rodando na máquina. Instalação,
+escolha dos modelos, Response Models, formato dos erros e exemplos estão em
+[`docs/llm/escolha_do_modelo.md`](../llm/escolha_do_modelo.md).
+
+```bash
+pip install -r requirements-llm.txt
+python src/llm/local_models.py download
 ```

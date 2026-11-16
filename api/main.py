@@ -8,24 +8,42 @@ Documentação interativa: http://localhost:8000/docs
 from __future__ import annotations
 
 import json
+import os
 import unicodedata
+from contextlib import asynccontextmanager
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator
 
+from api.llm_routes import llm_error_handler, router as llm_router
 from src.data import store
+from src.llm import engine
 from src.llm.corpus import build_corpus
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Opcional: EDUACESSO_PRELOAD=sentimento,resumo carrega os modelos na subida da API."""
+    tarefas = [t.strip() for t in os.getenv("EDUACESSO_PRELOAD", "").split(",") if t.strip() in engine.TAREFAS]
+    if tarefas:
+        engine.preload(tarefas)
+    yield
+
 
 app = FastAPI(
     title="EduAcesso ESG API",
-    version="3.0.0",
+    version="4.0.0",
     description=(
         "Consulta e envio de indicadores educacionais municipais (IDEB, abandono, "
-        "internet, PIB per capita), além de notícias coletadas e corpus preparado "
-        "para tarefas de LLM. Projeto de Bloco — IA Aplicada (TP3)."
+        "internet, PIB per capita), notícias coletadas, corpus para LLM e análise de "
+        "texto (sentimento e resumo) com modelos HuggingFace rodando localmente. "
+        "Projeto de Bloco — IA Aplicada (TP4)."
     ),
+    lifespan=lifespan,
 )
+app.add_exception_handler(engine.LLMError, llm_error_handler)
+app.include_router(llm_router)
 
 
 class Municipio(BaseModel):

@@ -23,6 +23,8 @@ st.markdown(
 | GET | `/estatisticas` | Agregados gerais e por UF |
 | GET | `/noticias` | Notícias coletadas com Beautiful Soup |
 | GET | `/corpus` | Documentos preparados para tarefas de LLM |
+| POST | `/processar_texto` | Sentimento ou resumo de um texto com LLM local (erros 422/503/504/500) |
+| GET | `/llm/status` | Modelos configurados/carregados e bibliotecas instaladas |
 """
 )
 

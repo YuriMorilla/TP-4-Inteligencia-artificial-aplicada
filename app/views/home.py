@@ -30,7 +30,7 @@ st.markdown(
 | 📰 **Notícias & Nuvem de Palavras** | Conteúdo coletado com Beautiful Soup: wordcloud, frequência de termos e notícias |
 | 📤 **Upload / Download** | Envio de CSV complementar e download da base |
 | 🔌 **API FastAPI** | Documentação das rotas e testador (GET/POST) |
-| 🤖 **Preparação para LLM** | Corpus unificado, tarefas planejadas, prompts e recuperação de contexto |
+| 🤖 **LLM local** | Sentimento e resumo com modelos HuggingFace rodando na máquina (via API), corpus e prompts |
 """
 )
 

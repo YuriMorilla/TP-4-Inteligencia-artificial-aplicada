@@ -1,9 +1,14 @@
 # Project Charter — EduAcesso ESG
 
-**Versão:** 3.0  
-**Data:** 2026-10-18  
+**Versão:** 4.0  
+**Data:** 2026-11-15  
 **Metodologia:** TDSP + CRISP-DM  
 
+> Changelog v4: LLM local (HuggingFace Transformers) integrado à API FastAPI com
+> `POST /processar_texto` (sentimento e resumo), Response Models, tratamento de
+> erros HTTP (422/503/504/500) e página "LLM local" no app. Escolha dos modelos
+> justificada em `docs/llm/escolha_do_modelo.md`. Seção 9 ampliada.
+>
 > Changelog v3: app Streamlit reorganizado em múltiplas páginas com menu de
 > navegação (`st.navigation`); API FastAPI com 6 rotas (GET/POST) documentada
 > em `docs/api/`; avaliação formal do Selenium (não adotado, ver seção 9);
@@ -83,7 +88,7 @@ completa via INEP/SIDRA, hoje representada por uma amostra de 15 municípios.
 - API FastAPI (`api/main.py`) com consulta (GET) e envio (POST) de dados, documentada em `docs/api/`
 - Corpus unificado (`data/processed/corpus_llm.*`) e templates de prompt (`src/llm/prompts.py`) para resumo, sentimento, Q&A e geração de texto
 - Score ESG-educação composto por múltiplos indicadores
-- Execução das tarefas de LLM (TP4; em TP3 apenas a preparação)
+- LLM local: sentimento e resumo via `POST /processar_texto` (TP4). Q&A e geração de relatório seguem como prompts preparados
 
 **Excluído:**
 - Dados privados de escolas particulares
@@ -136,7 +141,7 @@ para LLM; documentação revisada (Charter v3, Data Summary v3, `docs/api/`).
 
 ---
 
-## 9. Decisões técnicas (TP3)
+## 9. Decisões técnicas (TP3 e TP4)
 
 | Decisão | Justificativa |
 |---|---|
@@ -145,3 +150,5 @@ para LLM; documentação revisada (Charter v3, Data Summary v3, `docs/api/`).
 | Camada de dados única (`src/data/store.py`) | Streamlit, API e scripts compartilham a mesma lógica sem depender de Streamlit/FastAPI, o que simplifica testes |
 | Persistência em CSV para o POST | Suficiente para o escopo acadêmico e coerente com o requisito de dados em `data/`; migrar para banco se houver uso concorrente |
 | Corpus com 3 tipos de documento (texto, notícia, indicador) | Cobre as 4 tarefas de LLM previstas: resumo, sentimento, Q&A e geração |
+| LLM rodando localmente (HuggingFace), sem nuvem | Atende ao requisito de execução local e evita custo/dados fora da máquina. Os dois modelos rodam em CPU (o de resumo é mais lento): `lxyuan/distilbert-base-multilingual-cased-sentiments-student` (sentimento) e `csebuetnlp/mT5_multilingual_XLSum` (resumo). Justificativa completa em `docs/llm/escolha_do_modelo.md` |
+| Dependências de IA em `requirements-llm.txt` | Mantém o deploy do dashboard leve; a API responde 503 explicativo se elas faltarem |

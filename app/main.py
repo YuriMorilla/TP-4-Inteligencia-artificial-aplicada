@@ -21,9 +21,9 @@ pages = {
         st.Page("views/api.py", title="API FastAPI", icon="🔌"),
     ],
     "Inteligência Artificial": [
-        st.Page("views/llm.py", title="Preparação para LLM", icon="🤖"),
+        st.Page("views/llm.py", title="LLM local", icon="🤖"),
     ],
 }
 
-st.sidebar.caption("EduAcesso ESG · TP3 · CRISP-DM + TDSP")
+st.sidebar.caption("EduAcesso ESG · TP4 · CRISP-DM + TDSP")
 st.navigation(pages).run()
